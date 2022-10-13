@@ -34,6 +34,6 @@ def test_train_dqn():
     Expectation: success.
     '''
     context.set_context(mode=context.GRAPH_MODE)
-    ac_session = DQNSession()
-    ac_session.run(class_type=DQNTrainer, episode=5)
+    dqn_session = DQNSession()
+    dqn_session.run(class_type=DQNTrainer, episode=5)
     assert True
