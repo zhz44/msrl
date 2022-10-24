@@ -31,13 +31,16 @@ class MCTS(nn.Cell):
     Monte Carlo Tree Search(MCTS) is a general search algorithm for some kinds of decision processes,
     most notably those employed in software that plays board games, such as Go, chess. It was originally
     proposed in 2006. A general MCTS has four phases:
+
     1. Selection - selects the next node according to the selection policy (like UCT, RAVE, AMAF and etc.).
     2. Expansion - unless the selection reached a terminal state, expansion adds a new child node to
-    the last node (leaf node) that is selected in Selection phase.
-    3. Simulation - performs a complete random simulation of the game/problem to obtain the payoff.
+       the last node (leaf node) that is selected in Selection phase.
+    3. Simulation - performs an algorithm (random, neural net or other algorithms) to obtain the payoff.
     4. Backpropagation - propagates the payoff for all visited node.
+
     As the time goes by, these four phases of MCTS is evolved. AlphaGo introduced neural network to
     MCTS, which makes the MCTS more powerful.
+
     This class is a mindspore ops implementation MCTS. User can use provided MCTS algorithm, or develop
     their own MCTS by derived base class (MonteCarloTreeNode) in c++.
 
@@ -46,8 +49,8 @@ class MCTS(nn.Cell):
         tree_type (string): The name of tree type.
         node_type (string): The name of node type.
         root_player (float): The root player, which should be less than the total number of player.
-        customized_func (nn.Cell): Some algorithm specific codes. For more detail, please have a look at
-            documentation of AlgorithmBasedFunc.
+        customized_func (AlgorithmFunc): Some algorithm specific class. For more detail, please have a look at
+            documentation of AlgorithmFunc.
         device (string): The device type in ["CPU", "GPU"], Ascend is not support yet.
         args (Tensor): any values which will be the input of MctsCreation. Please following the table below
             to provide the input value. These value will not be reset after invoke 'restore_tree_data'.
@@ -56,15 +59,21 @@ class MCTS(nn.Cell):
             will accept the last action. Otherwise, it will accept max_action number of action. Default: -1.
         max_iteration (int): The max training iteration of MCTS. Default: 1000.
 
-            +------------------------------+-----------------+--------------------------------------------------------+
+            +------------------------------+-----------------+-----------------------------+--------------------------+
             |  MCTS Tree Type              |  MCTS Node Type |  Configuration Parameter    |  Notices                 |
-            +==============================+=================+========================================================+
+            +==============================+=================+=============================+==========================+
             |  CPUCommon                   |  CPUVanilla     |  UCT const                  |  UCT const is used to    |
-            |  GPUCommon                   |  GPUVanilla     |                             |  calculate UCT value in  |
-            |                              |                 |                             |  Selection phase         |
-            +------------------------------+-----------------+--------------------------------------------------------+
+            +------------------------------+-----------------+-----------------------------+  calculate UCT value in  |
+            |  GPUCommon                   |  GPUVanilla     |  UCT const                  |  Selection phase         |
+            |                              |                 |                             |                          |
+            +------------------------------+-----------------+-----------------------------+--------------------------+
 
     Examples:
+        >>> from mindspore import Tensor
+        >>> import mindspore as ms
+        >>> from mindspore_rl.environment import TicTacToeEnvironment
+        >>> from mindspore_rl.utils import VanillaFunc
+        >>> from mindspore_rl.utils import MCTS
         >>> env = TicTacToeEnvironment(None)
         >>> vanilla_func = VanillaFunc(env)
         >>> uct = (Tensor(uct, ms.float32),)
@@ -105,7 +114,7 @@ class MCTS(nn.Cell):
                                                                                   "total_num_player")) \
             .target(device) \
             .get_op_info()
-        if (root_player > env.total_num_player() or root_player < 0):
+        if (root_player >= env.total_num_player() or root_player < 0):
             raise ValueError("root_player {} is illegal, it needs to in range [0, {})".format(
                 root_player, env.total_num_player()))
 
@@ -317,8 +326,8 @@ class MCTS(nn.Cell):
                             algorithm.
 
         Returns:
-            action (mindspore.int32): The action which is returned by monte carlo tree search.
-            handle (mindspore.int64): The unique handle of mcts tree.
+            - action (mindspore.int32), The action which is returned by monte carlo tree search.
+            - handle (mindspore.int64), The unique handle of mcts tree.
         """
 
         expanded = self.false
@@ -363,20 +372,20 @@ class MCTS(nn.Cell):
 
     @ms_function
     def restore_tree_data(self, handle):
-        """
-        restore_tree_data will restore all the data in the tree.
+        r"""
+        restore_tree_data will restore all the data in the tree, back to the initial state.
 
         Args:
             handle (mindspore.int64): The unique handle of mcts tree.
 
         Returns:
-            success (mindspore.bool_): Whether restore is successful.
+            - success (mindspore.bool\_), Whether restore is successful.
         """
         return self.restore_tree(handle)
 
     @ms_function
     def destroy(self, handle):
-        """
+        r"""
         destroy will destroy current tree. Please call this function ONLY when
         do not use this tree any more.
 
@@ -384,7 +393,7 @@ class MCTS(nn.Cell):
             handle (mindspore.int64): The unique handle of mcts tree.
 
         Returns:
-            success (mindspore.bool_): Whether destroy is successful.
+            - success (mindspore.bool\_), Whether destroy is successful.
         """
         return self.destroy_tree(handle)
 
@@ -418,7 +427,7 @@ class AlgorithmFunc(nn.Cell):
             legal_action (mindspore.int32): The legal action of environment
 
         Returns:
-            prior (mindspore.float32): The probability (or prior) of all the input legal actions.
+            - prior (mindspore.float32), The probability (or prior) of all the input legal actions.
         """
         raise NotImplementedError("You must implement this function")
 
@@ -431,7 +440,7 @@ class AlgorithmFunc(nn.Cell):
             new_state (mindspore.float32): The state of environment.
 
         Returns:
-            rewards (mindspore.float32): The results of simulation.
+            - rewards (mindspore.float32), The results of simulation.
         """
         raise NotImplementedError("You must implement this function")
 
@@ -440,6 +449,13 @@ class VanillaFunc(AlgorithmFunc):
     """
     This is the customized algorithm for VanillaMCTS. The prior of each legal action is uniform
     distribution and it plays randomly to obtain the result of simulation.
+
+    Args:
+        env (Environment): The input environment.
+
+    Examples:
+        >>> env = TicTacToeEnvironment(None)
+        >>> vanilla_func = VanillaFunc(env)
     """
 
     def __init__(self, env):
@@ -461,7 +477,7 @@ class VanillaFunc(AlgorithmFunc):
             legal_action (mindspore.int32): The legal action of environment
 
         Returns:
-            prior (mindspore.float32): The probability (or prior) of all the input legal actions.
+            - prior (mindspore.float32), The probability (or prior) of all the input legal actions.
         """
         invalid_action_num = (legal_action == -1).sum()
         prior = self.ones_like(legal_action).astype(ms.float32) /  \
@@ -476,7 +492,7 @@ class VanillaFunc(AlgorithmFunc):
             new_state (mindspore.float32): The state of environment.
 
         Returns:
-            rewards (mindspore.float32): The results of simulation.
+            - rewards (mindspore.float32), The results of simulation.
         """
         _, reward, done = self.env.load(new_state)
         while not done:
