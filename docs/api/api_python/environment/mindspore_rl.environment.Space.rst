@@ -12,44 +12,42 @@
     .. py:method:: boundary
         :property:
 
-        **返回：**
+        当前Space的边界。
 
-        当前空间的上下边界。
+        返回：
+            当前空间的上下边界。
 
     .. py:method:: is_discrete
         :property:
 
-        **返回：**
+        当前Space是否为离散。
 
-        是否为离散空间。
+        返回：
+            是否为离散空间。
 
     .. py:method:: ms_dtype
         :property:
 
-        **返回：**
+        当前Space的MindSpore数据类型。
 
-        当前空间的MindSpore的数据类型。
+        返回：
+            当前空间的MindSpore的数据类型。
 
     .. py:method:: np_dtype
         :property:
 
-        **返回：**
+        当前Space的numpy数据类型。
 
-        当前空间的Numpy的数据类型。
+        返回：
+            当前空间的Numpy的数据类型。
 
     .. py:method:: num_values
         :property:
 
-        **返回：**
+        当前Space的可用动作数量。
 
-        当前空间可选动作的数量。
-
-    .. py:method:: shape
-        :property:
-
-        **返回：**
-
-        批处理后的Space的Shape。
+        返回：
+            当前空间可选动作的数量。
 
     .. py:method:: sample()
 
@@ -57,3 +55,11 @@
 
         返回：
             - **action** (Tensor) - 一个合法动作的Tensor。
+
+    .. py:method:: shape
+        :property:
+
+        批处理后的shape。
+
+        返回：
+            批处理后的Space的Shape。
