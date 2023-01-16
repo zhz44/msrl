@@ -4,7 +4,7 @@
     Trainer的基类。是一个流程类，提供训练的基本模式。
 
     .. note:: 引用 `dqn_trainer.py
-              <https://gitee.com/mindspore/docs/blob/master/docs/reinforcement/docs/source_en/dqn.md#defining-the-dqntrainer-class>`_。
+              <https://www.mindspore.cn/reinforcement/docs/zh-CN/r0.6.0-alpha/dqn.html#defining-the-dqntrainer-class>`_。
 
     参数：
         - **msrl** (MSRL) - 函数句柄。
